@@ -255,6 +255,9 @@ def verify(qos):
                 if policy_type in ['priority_queue']:
                     if 'default' not in policy_config:
                         raise ConfigError(f'Policy {policy} misses "default" class!')
+                if policy_type in ['rate_control']:
+                    if 'bandwidth' not in policy_config:
+                        raise ConfigError('Bandwidth not defined')
                 if 'default' in policy_config:
                     if 'bandwidth' not in policy_config['default'] and policy_type not in ['priority_queue', 'round_robin', 'shaper_hfsc']:
                         raise ConfigError('Bandwidth not defined for default traffic!')

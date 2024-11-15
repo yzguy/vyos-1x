@@ -922,6 +922,27 @@ class TestQoS(VyOSUnitTestSHIM.TestCase):
             tmp[2]['options'],
         )
 
+    def test_22_rate_control_default(self):
+        interface = self._interfaces[0]
+        policy_name = f'qos-policy-{interface}'
+        bandwidth = 5000
+
+        self.cli_set(base_path + ['interface', interface, 'egress', policy_name])
+        self.cli_set(base_path + ['policy', 'rate-control', policy_name])
+        with self.assertRaises(ConfigSessionError):
+            # Bandwidth not defined
+            self.cli_commit()
+
+        self.cli_set(base_path + ['policy', 'rate-control', policy_name, 'bandwidth', str(bandwidth)])
+        # commit changes
+        self.cli_commit()
+
+        tmp = get_tc_qdisc_json(interface)
+
+        self.assertEqual('tbf', tmp['kind'])
+        # TC store rates as a 32-bit unsigned integer in bps (Bytes per second)
+        self.assertEqual(int(bandwidth * 125), tmp['options']['rate'])
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
