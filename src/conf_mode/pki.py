@@ -149,35 +149,15 @@ def get_config(config=None):
     if len(argv) > 1 and argv[1] == 'certbot_renew':
         pki['certbot_renew'] = {}
 
-    tmp = node_changed(conf, base + ['ca'], recursive=True, expand_nodes=Diff.DELETE | Diff.ADD)
-    if tmp:
-        if 'changed' not in pki: pki.update({'changed':{}})
-        pki['changed'].update({'ca' : tmp})
+    changed_keys = ['ca', 'certificate', 'dh', 'key-pair', 'openssh', 'openvpn']
 
-    tmp = node_changed(conf, base + ['certificate'], recursive=True, expand_nodes=Diff.DELETE | Diff.ADD)
-    if tmp:
-        if 'changed' not in pki: pki.update({'changed':{}})
-        pki['changed'].update({'certificate' : tmp})
+    for key in changed_keys:
+        tmp = node_changed(conf, base + [key], recursive=True, expand_nodes=Diff.DELETE | Diff.ADD)
 
-    tmp = node_changed(conf, base + ['dh'], recursive=True, expand_nodes=Diff.DELETE | Diff.ADD)
-    if tmp:
-        if 'changed' not in pki: pki.update({'changed':{}})
-        pki['changed'].update({'dh' : tmp})
+        if 'changed' not in pki:
+            pki.update({'changed':{}})
 
-    tmp = node_changed(conf, base + ['key-pair'], recursive=True, expand_nodes=Diff.DELETE | Diff.ADD)
-    if tmp:
-        if 'changed' not in pki: pki.update({'changed':{}})
-        pki['changed'].update({'key_pair' : tmp})
-
-    tmp = node_changed(conf, base + ['openssh'], recursive=True, expand_nodes=Diff.DELETE | Diff.ADD)
-    if tmp:
-        if 'changed' not in pki: pki.update({'changed':{}})
-        pki['changed'].update({'openssh' : tmp})
-
-    tmp = node_changed(conf, base + ['openvpn', 'shared-secret'], recursive=True, expand_nodes=Diff.DELETE | Diff.ADD)
-    if tmp:
-        if 'changed' not in pki: pki.update({'changed':{}})
-        pki['changed'].update({'openvpn' : tmp})
+        pki['changed'].update({key.replace('-', '_') : tmp})
 
     # We only merge on the defaults of there is a configuration at all
     if conf.exists(base):
