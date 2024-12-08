@@ -19,6 +19,7 @@ A library for retrieving value dicts from VyOS configs in a declarative fashion.
 import os
 import json
 
+from vyos.defaults import frr_debug_enable
 from vyos.utils.dict import dict_search
 from vyos.utils.process import cmd
 
@@ -1124,8 +1125,9 @@ def get_frrender_dict(conf) -> dict:
 
         dict.update({'vrf' : vrf})
 
-    print('======== < > ==========')
-    import pprint
-    pprint.pprint(dict)
-    print('======== < > ==========')
+    if os.path.exists(frr_debug_enable):
+        print('======== < BEGIN > ==========')
+        import pprint
+        pprint.pprint(dict)
+        print('========= < END > ===========')
     return dict

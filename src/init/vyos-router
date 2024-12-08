@@ -474,9 +474,10 @@ start ()
     # enable some debugging before loading the configuration
     if grep -q vyos-debug /proc/cmdline; then
         log_action_begin_msg "Enable runtime debugging options"
+        FRR_DEBUG=$(python3 -c "from vyos.defaults import frr_debug_enable; print(frr_debug_enable)")
+        touch $FRR_DEBUG
         touch /tmp/vyos.container.debug
         touch /tmp/vyos.ifconfig.debug
-        touch /tmp/vyos.frr.debug
         touch /tmp/vyos.container.debug
         touch /tmp/vyos.smoketest.debug
     fi
