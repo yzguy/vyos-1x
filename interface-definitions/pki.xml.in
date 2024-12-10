@@ -80,7 +80,7 @@
                   </constraint>
                 </properties>
               </leafNode>
-              #include <include/listen-address-ipv4-single.xml.i>
+              #include <include/listen-address-single.xml.i>
               <leafNode name="rsa-key-size">
                 <properties>
                   <help>Size of the RSA key</help>
