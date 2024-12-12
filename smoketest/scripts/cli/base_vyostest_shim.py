@@ -103,6 +103,9 @@ class VyOSUnitTestSHIM:
 
         def getFRRconfig(self, string=None, end='$', endsection='^!', daemon=''):
             """ Retrieve current "running configuration" from FRR """
+            # Sometimes FRR needs some time after reloading the configuration to
+            # appear in vtysh. This is a workaround addiung a 2 seconds guard timer
+            sleep(2)
             command = f'vtysh -c "show run {daemon} no-header"'
             if string: command += f' | sed -n "/^{string}{end}/,/{endsection}/p"'
             out = cmd(command)
