@@ -417,6 +417,25 @@ class EthernetIf(Interface):
             print(f'could not set "{rx_tx}" ring-buffer for {ifname}')
         return output
 
+    def set_switchdev(self, enable):
+        ifname = self.config['ifname']
+        addr, code = self._popen(f'ethtool -i {ifname} | grep bus-info | awk \'{{print $2}}\'')
+        if code != 0:
+            print(f'could not resolve PCIe address of {ifname}')
+            return
+
+        enabled = False
+        state, code = self._popen(f'/sbin/devlink dev eswitch show pci/{addr}  | awk \'{{print $3}}\'')
+        if code == 0 and state == 'switchdev':
+            enabled = True
+
+        if enable and not enabled:
+            output, code = self._popen(f'/sbin/devlink dev eswitch set pci/{addr} mode switchdev')
+            if code != 0:
+                print(f'{ifname} does not support switchdev mode')
+        elif not enable and enabled:
+            self._cmd(f'/sbin/devlink dev eswitch set pci/{addr} mode legacy')
+
     def update(self, config):
         """ General helper function which works on a dictionary retrived by
         get_config_dict(). It's main intention is to consolidate the scattered
@@ -462,6 +481,8 @@ class EthernetIf(Interface):
         if 'ring_buffer' in config:
             for rx_tx, size in config['ring_buffer'].items():
                 self.set_ring_buffer(rx_tx, size)
+
+        self.set_switchdev('switchdev' in config)
 
         # call base class last
         super().update(config)

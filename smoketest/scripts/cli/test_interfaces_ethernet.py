@@ -223,5 +223,14 @@ class EthernetInterfaceTest(BasicInterfaceTest.TestCase):
             frrconfig = self.getFRRconfig(f'interface {interface}', daemon=mgmt_daemon)
             self.assertIn(f' evpn mh uplink', frrconfig)
 
+    def test_switchdev(self):
+        interface = self._interfaces[0]
+        self.cli_set(self._base_path + [interface, 'switchdev'])
+
+        # check validate() - virtual interfaces do not support switchdev
+        # should print out warning that enabling failed
+
+        self.cli_delete(self._base_path + [interface, 'switchdev'])
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
