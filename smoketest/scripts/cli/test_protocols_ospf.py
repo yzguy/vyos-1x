@@ -570,23 +570,7 @@ class TestProtocolsOSPF(VyOSUnitTestSHIM.TestCase):
         self.cli_commit()
 
         # Verify FRR ospfd configuration
-        frrconfig = self.getFRRconfig('router ospf', endsection='^exit', daemon=ospf_daemon)
-        # Required to prevent the race condition T6761
-        retry_count = 0
-        max_retries = 60
-
-        while not frrconfig and retry_count < max_retries:
-            # Log every 10 seconds
-            if retry_count % 10 == 0:
-                print(f"Attempt {retry_count}: FRR config is still empty. Retrying...")
-
-            retry_count += 1
-            sleep(1)
-            frrconfig = self.getFRRconfig('router ospf', endsection='^exit', daemon=ospf_daemon)
-
-        if not frrconfig:
-            print("Failed to retrieve FRR config after 60 seconds")
-
+        frrconfig = self.getFRRconfig('router ospf', endsection='^exit', daemon=ospf_daemon, empty_retry=60)
         self.assertIn(f'router ospf', frrconfig)
         self.assertIn(f' network {network} area {area1}', frrconfig)
 

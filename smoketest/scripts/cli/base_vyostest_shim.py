@@ -18,6 +18,7 @@ import paramiko
 import pprint
 
 from time import sleep
+from time import time
 from typing import Type
 
 from vyos.configsession import ConfigSession
@@ -43,7 +44,7 @@ class VyOSUnitTestSHIM:
         # trigger the certain failure condition.
         # Use "self.debug = True" in derived classes setUp() method
         debug = False
-
+        commit_guard = time()
         @classmethod
         def setUpClass(cls):
             cls._session = ConfigSession(os.getpid())
@@ -87,6 +88,8 @@ class VyOSUnitTestSHIM:
             # during a commit there is a process opening commit_lock, and run() returns 0
             while run(f'sudo lsof -nP {commit_lock}') == 0:
                 sleep(0.250)
+            # reset getFRRconfig() guard timer
+            self.commit_guard = time()
 
         def op_mode(self, path : list) -> None:
             """
@@ -101,17 +104,29 @@ class VyOSUnitTestSHIM:
                 pprint.pprint(out)
             return out
 
-        def getFRRconfig(self, string=None, end='$', endsection='^!', daemon=''):
+        def getFRRconfig(self, string=None, end='$', endsection='^!', daemon='', guard_time=10, empty_retry=0):
             """ Retrieve current "running configuration" from FRR """
             # Sometimes FRR needs some time after reloading the configuration to
-            # appear in vtysh. This is a workaround addiung a 2 seconds guard timer
-            sleep(2)
+            # appear in vtysh. This is a workaround addiung a 10 second guard timer
+            # between the last cli_commit() and the first read of FRR config via vtysh
+            while (time() - self.commit_guard) < guard_time:
+                sleep(0.250) # wait 250 milliseconds
             command = f'vtysh -c "show run {daemon} no-header"'
             if string: command += f' | sed -n "/^{string}{end}/,/{endsection}/p"'
             out = cmd(command)
             if self.debug:
                 print(f'\n\ncommand "{command}" returned:\n')
                 pprint.pprint(out)
+            if empty_retry:
+                retry_count = 0
+                while not out and retry_count < empty_retry:
+                    if self.debug and retry_count % 10 == 0:
+                        print(f"Attempt {retry_count}: FRR config is still empty. Retrying...")
+                    retry_count += 1
+                    sleep(1)
+                    out = cmd(command)
+                if not out:
+                    print(f'FRR configuration still empty after {empty_retry} retires!')
             return out
 
         @staticmethod
