@@ -145,7 +145,6 @@ def generate(ssh):
 
 
 def apply(ssh):
-    systemd_service_ssh = 'ssh.service'
     systemd_service_sshguard = 'sshguard.service'
     if not ssh:
         # SSH access is removed in the commit
