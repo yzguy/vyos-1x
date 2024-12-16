@@ -1945,7 +1945,7 @@ class TestPolicy(VyOSUnitTestSHIM.TestCase):
         local_preference = base_local_preference
         table = base_table
         for route_map in route_maps:
-            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='')
+            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='', endsection='^exit')
             self.assertIn(f' set local-preference {local_preference}', config)
             self.assertIn(f' set table {table}', config)
             local_preference += 20
@@ -1958,7 +1958,7 @@ class TestPolicy(VyOSUnitTestSHIM.TestCase):
 
         local_preference = base_local_preference
         for route_map in route_maps:
-            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='')
+            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='', endsection='^exit')
             self.assertIn(f' set local-preference {local_preference}', config)
             local_preference += 20
 
@@ -1972,7 +1972,7 @@ class TestPolicy(VyOSUnitTestSHIM.TestCase):
         self.cli_commit()
 
         for route_map in route_maps:
-            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='')
+            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='', endsection='^exit')
             self.assertIn(f' set as-path prepend {prepend}', config)
 
         for route_map in route_maps:
@@ -1981,7 +1981,7 @@ class TestPolicy(VyOSUnitTestSHIM.TestCase):
             self.cli_commit()
 
         for route_map in route_maps:
-            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='')
+            config = self.getFRRconfig(f'route-map {route_map} permit {seq}', end='', endsection='^exit')
             self.assertNotIn(f' set', config)
 
 def sort_ip(output):

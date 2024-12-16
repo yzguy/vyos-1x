@@ -365,6 +365,12 @@
             </properties>
             <command>journalctl --no-hostname --boot --follow --unit keepalived.service</command>
           </leafNode>
+          <leafNode name="vyos-configd">
+            <properties>
+              <help>Monitor last lines of VyOS configuration daemon log</help>
+            </properties>
+            <command>journalctl --no-hostname --boot --follow --unit vyos-configd.service</command>
+          </leafNode>
           <node name="wireless">
             <properties>
               <help>Monitor last lines of Wireless interface log</help>
