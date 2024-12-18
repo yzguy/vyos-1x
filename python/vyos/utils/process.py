@@ -128,7 +128,7 @@ def run(command, flag='', shell=None, input=None, timeout=None, env=None,
 
 def cmd(command, flag='', shell=None, input=None, timeout=None, env=None,
         stdout=PIPE, stderr=PIPE, decode='utf-8', raising=None, message='',
-        expect=[0]):
+        expect=[0], auth=''):
     """
     A wrapper around popen, which returns the stdout and
     will raise the error code of a command
@@ -139,7 +139,7 @@ def cmd(command, flag='', shell=None, input=None, timeout=None, env=None,
     expect:  a list of error codes to consider as normal
     """
     decoded, code = popen(
-        command, flag,
+        f'{auth} {command}'.strip(), flag,
         stdout=stdout, stderr=stderr,
         input=input, timeout=timeout,
         env=env, shell=shell,
