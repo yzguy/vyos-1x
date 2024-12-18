@@ -19,11 +19,11 @@ from jmespath import search
 from json import loads
 
 from vyos.config import Config
-from vyos.configdict import get_frrender_dict
 from vyos.configdict import node_changed
 from vyos.configverify import verify_route_map
 from vyos.firewall import conntrack_required
 from vyos.frrender import FRRender
+from vyos.frrender import get_frrender_dict
 from vyos.ifconfig import Interface
 from vyos.template import render
 from vyos.utils.dict import dict_search
