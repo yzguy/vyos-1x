@@ -19,8 +19,11 @@ Library used to interface with FRRs mgmtd introduced in version 10.0
 
 import os
 
+from time import sleep
+
 from vyos.defaults import frr_debug_enable
 from vyos.utils.file import write_file
+from vyos.utils.process import cmd
 from vyos.utils.process import rc_cmd
 from vyos.template import render_to_string
 from vyos import ConfigError
@@ -53,7 +56,7 @@ zebra_daemon = 'zebra'
 
 class FRRender:
     def __init__(self):
-        self._frr_conf = '/run/frr/config/frr.conf'
+        self._frr_conf = '/run/frr/config/vyos.frr.conf'
 
     def generate(self, config):
         if not isinstance(config, dict):
@@ -136,7 +139,7 @@ class FRRender:
             output += '\n'
 
         if 'vrf' in config and 'name' in config['vrf']:
-            output += render_to_string('frr/zebra.vrf.route-map.frr.j2', config['vrf']) + '\n'
+            output += render_to_string('frr/zebra.vrf.route-map.frr.j2', config['vrf'])
             for vrf, vrf_config in config['vrf']['name'].items():
                 if 'protocols' not in vrf_config:
                     continue
@@ -145,32 +148,34 @@ class FRRender:
 
                 output += inline_helper(vrf_config['protocols'])
 
+        # remove any accidently added empty newline to not confuse FRR
+        output = os.linesep.join([s for s in output.splitlines() if s])
+
+        if '!!' in output:
+            raise ConfigError('FRR configuration contains "!!" which is not allowed')
+
         debug(output)
         debug('======< RENDERING CONFIG COMPLETE >======')
         write_file(self._frr_conf, output)
-        if DEBUG_ON: write_file('/tmp/frr.conf.debug', output)
 
-    def apply(self):
+    def apply(self, count_max=5):
         count = 0
-        count_max = 5
         emsg = ''
         while count < count_max:
             count += 1
             debug(f'FRR: Reloading configuration - tries: {count} | Python class ID: {id(self)}')
-
             cmdline = '/usr/lib/frr/frr-reload.py --reload'
-            if DEBUG_ON:
-                cmdline += ' --debug'
+            if DEBUG_ON: cmdline += ' --debug'
             rc, emsg = rc_cmd(f'{cmdline} {self._frr_conf}')
             if rc != 0:
-                debug('FRR configuration reload failed, retrying')
+                sleep(2)
                 continue
             debug(emsg)
             debug('======< DONE APPLYING CONFIG  >======')
             break
+
         if count >= count_max:
             raise ConfigError(emsg)
 
-    def save_configuration():
-        """ T3217: Save FRR configuration to /run/frr/config/frr.conf """
+        # T3217: Save FRR configuration to /run/frr/config/frr.conf
         return cmd('/usr/bin/vtysh -n --writeconfig')
