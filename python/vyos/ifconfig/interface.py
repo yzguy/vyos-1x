@@ -26,8 +26,9 @@ from netifaces import ifaddresses
 # this is not the same as socket.AF_INET/INET6
 from netifaces import AF_INET
 from netifaces import AF_INET6
+from netaddr import EUI
+from netaddr import mac_unix_expanded
 
-from vyos import ConfigError
 from vyos.configdict import list_diff
 from vyos.configdict import dict_merge
 from vyos.configdict import get_vlan_ids
@@ -61,9 +62,7 @@ from vyos.ifconfig.control import Control
 from vyos.ifconfig.vrrp import VRRP
 from vyos.ifconfig.operational import Operational
 from vyos.ifconfig import Section
-
-from netaddr import EUI
-from netaddr import mac_unix_expanded
+from vyos import ConfigError
 
 link_local_prefix = 'fe80::/64'
 
@@ -339,8 +338,8 @@ class Interface(Control):
             # Any instance of Interface, such as Interface('eth0') can be used
             # safely to access the generic function in this class as 'type' is
             # unset, the class can not be created
-            if not self.iftype:
-                raise Exception(f'interface "{ifname}" not found')
+            if not hasattr(self, 'iftype'):
+                raise ConfigError(f'Interface "{ifname}" has no "iftype" attribute defined!')
             self.config['type'] = self.iftype
 
             # Should an Instance of a child class (EthernetIf, DummyIf, ..)
