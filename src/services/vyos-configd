@@ -38,6 +38,7 @@ from vyos.configsource import ConfigSourceError
 from vyos.configdiff import get_commit_scripts
 from vyos.config import Config
 from vyos.frrender import FRRender
+from vyos.frrender import get_frrender_dict
 from vyos import ConfigError
 
 CFG_GROUP = 'vyattacfg'
@@ -333,6 +334,8 @@ if __name__ == '__main__':
 
                 if hasattr(config, 'frrender_cls') and res == R_SUCCESS:
                     frrender_cls = getattr(config, 'frrender_cls')
+                    tmp = get_frrender_dict(config)
+                    frrender_cls.generate(tmp)
                     frrender_cls.apply()
         else:
             logger.critical(f'Unexpected message: {message}')

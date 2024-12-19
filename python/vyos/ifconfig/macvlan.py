@@ -1,4 +1,4 @@
-# Copyright 2019-2022 VyOS maintainers and contributors <maintainers@vyos.io>
+# Copyright 2019-2024 VyOS maintainers and contributors <maintainers@vyos.io>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -42,6 +42,5 @@ class MACVLANIf(Interface):
         self.set_admin_state('down')
 
     def set_mode(self, mode):
-        ifname = self.config['ifname']
-        cmd = f'ip link set dev {ifname} type macvlan mode {mode}'
+        cmd = f'ip link set dev {self.ifname} type {self.iftype} mode {mode}'
         return self._cmd(cmd)
