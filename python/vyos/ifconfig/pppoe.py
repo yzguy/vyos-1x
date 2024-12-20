@@ -115,14 +115,6 @@ class PPPoEIf(Interface):
         # before this is done by the base class.
         self._config = config
 
-        # remove old routes from an e.g. old VRF assignment
-        if 'shutdown_required':
-            vrf = None
-            tmp = get_interface_config(self.ifname)
-            if 'master' in tmp:
-                vrf = tmp['master']
-            self._remove_routes(vrf)
-
         # DHCPv6 PD handling is a bit different on PPPoE interfaces, as we do
         # not require an 'address dhcpv6' CLI option as with other interfaces
         if 'dhcpv6_options' in config and 'pd' in config['dhcpv6_options']:
