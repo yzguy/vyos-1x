@@ -134,6 +134,8 @@ def generate(ssh):
         write_file(
             trusted_user_ca_key, '\n'.join(encode_certificate(c) for c in ca_full_chain)
         )
+    elif os.path.exists(trusted_user_ca_key):
+        os.unlink(trusted_user_ca_key)
 
     render(config_file, 'ssh/sshd_config.j2', ssh)
 
