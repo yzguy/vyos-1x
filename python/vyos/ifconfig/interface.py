@@ -29,6 +29,7 @@ from netifaces import AF_INET6
 from netaddr import EUI
 from netaddr import mac_unix_expanded
 
+from vyos.base import ConfigError
 from vyos.configdict import list_diff
 from vyos.configdict import dict_merge
 from vyos.configdict import get_vlan_ids
@@ -43,6 +44,7 @@ from vyos.template import render
 from vyos.utils.network import mac2eui64
 from vyos.utils.dict import dict_search
 from vyos.utils.network import get_interface_config
+from vyos.utils.network import get_interface_address
 from vyos.utils.network import get_interface_namespace
 from vyos.utils.network import get_vrf_tableid
 from vyos.utils.network import is_netns_interface
@@ -62,7 +64,6 @@ from vyos.ifconfig.control import Control
 from vyos.ifconfig.vrrp import VRRP
 from vyos.ifconfig.operational import Operational
 from vyos.ifconfig import Section
-from vyos import ConfigError
 
 link_local_prefix = 'fe80::/64'
 
@@ -1375,12 +1376,11 @@ class Interface(Control):
         if enable not in [True, False]:
             raise ValueError()
 
-        ifname = self.ifname
         config_base = directories['isc_dhclient_dir'] + '/dhclient'
-        dhclient_config_file = f'{config_base}_{ifname}.conf'
-        dhclient_lease_file = f'{config_base}_{ifname}.leases'
-        systemd_override_file = f'/run/systemd/system/dhclient@{ifname}.service.d/10-override.conf'
-        systemd_service = f'dhclient@{ifname}.service'
+        dhclient_config_file = f'{config_base}_{self.ifname}.conf'
+        dhclient_lease_file = f'{config_base}_{self.ifname}.leases'
+        systemd_override_file = f'/run/systemd/system/dhclient@{self.ifname}.service.d/10-override.conf'
+        systemd_service = f'dhclient@{self.ifname}.service'
 
         # Rendered client configuration files require the apsolute config path
         self.config['isc_dhclient_dir'] = directories['isc_dhclient_dir']
@@ -1414,6 +1414,21 @@ class Interface(Control):
         else:
             if is_systemd_service_active(systemd_service):
                 self._cmd(f'systemctl stop {systemd_service}')
+
+            # Smoketests occationally fail if the lease is not removed from the Kernel fast enough:
+            # AssertionError: 2 unexpectedly found in {17: [{'addr': '52:54:00:00:00:00',
+            # 'broadcast': 'ff:ff:ff:ff:ff:ff'}], 2: [{'addr': '192.0.2.103', 'netmask': '255.255.255.0',
+            #
+            # We will force removal of any dynamic IPv4 address from the interface
+            tmp = get_interface_address(self.ifname)
+            if tmp and 'addr_info' in tmp:
+                for address_dict in tmp['addr_info']:
+                    # Only remove dynamic assigned addresses
+                    if 'dynamic' not in address_dict:
+                        continue
+                    address = address_dict['local']
+                    self.del_addr(address)
+
             # cleanup old config files
             for file in [dhclient_config_file, systemd_override_file, dhclient_lease_file]:
                 if os.path.isfile(file):
