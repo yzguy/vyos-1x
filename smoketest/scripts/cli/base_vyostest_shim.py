@@ -27,6 +27,7 @@ from vyos import ConfigError
 from vyos.defaults import commit_lock
 from vyos.utils.process import cmd
 from vyos.utils.process import run
+from vyos.utils.process import process_named_running
 
 save_config = '/tmp/vyos-smoketest-save'
 
@@ -87,6 +88,9 @@ class VyOSUnitTestSHIM:
             self._session.commit()
             # during a commit there is a process opening commit_lock, and run() returns 0
             while run(f'sudo lsof -nP {commit_lock}') == 0:
+                sleep(0.250)
+            # wait for FRR reload to be complete
+            while process_named_running('frr-reload.py'):
                 sleep(0.250)
             # reset getFRRconfig() guard timer
             self.commit_guard = time()
