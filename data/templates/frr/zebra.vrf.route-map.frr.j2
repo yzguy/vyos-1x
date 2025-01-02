@@ -1,3 +1,4 @@
+{% from 'frr/rpki_macro.frr.j2' import render_rpki %}
 !
 {% if name is vyos_defined %}
 {%     for vrf, vrf_config in name.items() %}
@@ -20,6 +21,9 @@ vrf {{ vrf }}
 {%                 endif %}
  ipv6 protocol {{ protocol_name }} route-map {{ protocol_config.route_map }}
 {%             endfor %}
+{%         endif %}
+{%         if vrf_config.protocols.rpki is vyos_defined %}
+ {{ render_rpki(vrf_config.protocols.rpki) | indent(width=1) }}
 {%         endif %}
 {%         if vrf_config.vni is vyos_defined %}
  vni {{ vrf_config.vni }}
