@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import unittest
 
 from base_vyostest_shim import VyOSUnitTestSHIM
@@ -55,12 +56,18 @@ class TestMonitoringPrometheus(VyOSUnitTestSHIM.TestCase):
 
     def test_01_node_exporter(self):
         self.cli_set(base_path + ['node-exporter', 'listen-address', listen_ip])
+        self.cli_set(base_path + ['node-exporter', 'collectors', 'textfile'])
 
         # commit changes
         self.cli_commit()
 
         file_content = read_file(node_exporter_service_file)
         self.assertIn(f'{listen_ip}:9100', file_content)
+
+        self.assertTrue(os.path.isdir('/run/node_exporter/collector'))
+        self.assertIn(
+            '--collector.textfile.directory=/run/node_exporter/collector', file_content
+        )
 
         # Check for running process
         self.assertTrue(process_named_running(NODE_EXPORTER_PROCESS_NAME))
