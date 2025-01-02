@@ -482,6 +482,16 @@ def get_frrender_dict(conf, argv=None) -> dict:
             elif conf.exists_effective(ospfv3_vrf_path):
                 vrf['name'][vrf_name]['protocols'].update({'ospfv3' : {'deleted' : ''}})
 
+            # We need to check the CLI if the ISIS node is present and thus load in all the default
+            # values present on the CLI - that's why we have if conf.exists()
+            rpki_vrf_path = ['vrf', 'name', vrf_name, 'protocols', 'rpki']
+            if 'rpki' in vrf_config.get('protocols', []):
+                rpki = conf.get_config_dict(rpki_vrf_path, key_mangling=('-', '_'), get_first_key=True,
+                                            no_tag_node_value_mangle=True, with_recursive_defaults=True)
+                vrf['name'][vrf_name]['protocols'].update({'rpki' : rpki})
+            elif conf.exists_effective(rpki_vrf_path):
+                vrf['name'][vrf_name]['protocols'].update({'rpki' : {'deleted' : ''}})
+
             # We need to check the CLI if the static node is present and thus load in all the default
             # values present on the CLI - that's why we have if conf.exists()
             static_vrf_path = ['vrf', 'name', vrf_name, 'protocols', 'static']
@@ -612,7 +622,7 @@ class FRRender:
                 output += render_to_string('frr/ripngd.frr.j2', config_dict['ripng'])
                 output += '\n'
             if 'rpki' in config_dict and 'deleted' not in config_dict['rpki']:
-                output += render_to_string('frr/rpki.frr.j2', config_dict['rpki'])
+                output += render_to_string('frr/rpki.frr.j2', {'rpki': config_dict['rpki']})
                 output += '\n'
             if 'segment_routing' in config_dict and 'deleted' not in config_dict['segment_routing']:
                 output += render_to_string('frr/zebra.segment_routing.frr.j2', config_dict['segment_routing'])
@@ -647,6 +657,11 @@ class FRRender:
             for vrf, vrf_config in config_dict['vrf']['name'].items():
                 if 'protocols' not in vrf_config:
                     continue
+
+                # RPKI configuration is not rendered the same as other VRF protocols
+                # See 'frr/zebra.vrf.route-map.frr.j2'
+                vrf_config['protocols'].pop('rpki', None)
+
                 for protocol in vrf_config['protocols']:
                     vrf_config['protocols'][protocol]['vrf'] = vrf
 
