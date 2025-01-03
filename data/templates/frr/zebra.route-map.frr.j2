@@ -1,16 +1,13 @@
+{% from 'frr/macro/zebra.j2' import zebra_config %}
+{% from 'frr/macro/rpki.j2' import rpki_config %}
 !
-{{ 'no ' if disable_forwarding is vyos_defined }}{{ afi }} forwarding
-!
-{% if nht.no_resolve_via_default is vyos_defined %}
-no {{ afi }} nht resolve-via-default
+{% if ip is vyos_defined %}
+{{ zebra_config(ip, 'ip') }}
 {% endif %}
-!
-{% if protocol is vyos_defined %}
-{%     for protocol_name, protocol_config in protocol.items() %}
-{%         if protocol_name is vyos_defined('ospfv3') %}
-{%             set protocol_name = 'ospf6' %}
-{%         endif %}
-{{ afi }} protocol {{ protocol_name }} route-map {{ protocol_config.route_map }}
-{%     endfor %}
+{% if ipv6 is vyos_defined %}
+{{ zebra_config(ipv6, 'ipv6') }}
+{% endif %}
+{% if rpki is vyos_defined %}
+{{ rpki_config(rpki) }}
 {% endif %}
 !

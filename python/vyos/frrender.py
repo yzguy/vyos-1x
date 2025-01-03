@@ -679,7 +679,7 @@ class FRRender:
                 output += render_to_string('frr/ripngd.frr.j2', config_dict['ripng'])
                 output += '\n'
             if 'rpki' in config_dict and 'deleted' not in config_dict['rpki']:
-                output += render_to_string('frr/rpki.frr.j2', {'rpki': config_dict['rpki']})
+                output += render_to_string('frr/zebra.route-map.frr.j2', {'rpki': config_dict['rpki']})
                 output += '\n'
             if 'segment_routing' in config_dict and 'deleted' not in config_dict['segment_routing']:
                 output += render_to_string('frr/zebra.segment_routing.frr.j2', config_dict['segment_routing'])
@@ -688,10 +688,10 @@ class FRRender:
                 output += render_to_string('frr/staticd.frr.j2', config_dict['static'])
                 output += '\n'
             if 'ip' in config_dict and 'deleted' not in config_dict['ip']:
-                output += render_to_string('frr/zebra.route-map.frr.j2', config_dict['ip'])
+                output += render_to_string('frr/zebra.route-map.frr.j2', {'ip': config_dict['ip']})
                 output += '\n'
             if 'ipv6' in config_dict and 'deleted' not in config_dict['ipv6']:
-                output += render_to_string('frr/zebra.route-map.frr.j2', config_dict['ipv6'])
+                output += render_to_string('frr/zebra.route-map.frr.j2', {'ipv6': config_dict['ipv6']})
                 output += '\n'
             if 'nhrp' in config_dict and 'deleted' not in config_dict['nhrp']:
                 output += render_to_string('frr/nhrpd.frr.j2', config_dict['nhrp'])
@@ -713,8 +713,9 @@ class FRRender:
             output += '\n'
 
         if 'vrf' in config_dict and 'name' in config_dict['vrf']:
-            output += render_to_string('frr/zebra.vrf.route-map.frr.j2', config_dict['vrf'])
             for vrf, vrf_config in config_dict['vrf']['name'].items():
+                output += render_to_string('frr/zebra.vrf.route-map.frr.j2', {'vrf': vrf, 'vrf_config': vrf_config})
+                output += '\n'
                 if 'protocols' not in vrf_config:
                     continue
 

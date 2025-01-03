@@ -1,34 +1,18 @@
-{% from 'frr/rpki_macro.frr.j2' import render_rpki %}
+{% from 'frr/macro/zebra.j2' import zebra_config %}
+{% from 'frr/macro/rpki.j2' import rpki_config %}
 !
-{% if name is vyos_defined %}
-{%     for vrf, vrf_config in name.items() %}
 vrf {{ vrf }}
-{%         if vrf_config.ip.nht.no_resolve_via_default is vyos_defined %}
- no ip nht resolve-via-default
-{%         endif %}
-{%         if vrf_config.ipv6.nht.no_resolve_via_default is vyos_defined %}
- no ipv6 nht resolve-via-default
-{%         endif %}
-{%         if vrf_config.ip.protocol is vyos_defined %}
-{%             for protocol_name, protocol_config in vrf_config.ip.protocol.items() %}
- ip protocol {{ protocol_name }} route-map {{ protocol_config.route_map }}
-{%             endfor %}
-{%         endif %}
-{%         if vrf_config.ipv6.protocol is vyos_defined %}
-{%             for protocol_name, protocol_config in vrf_config.ipv6.protocol.items() %}
-{%                 if protocol_name is vyos_defined('ospfv3') %}
-{%                     set protocol_name = 'ospf6' %}
-{%                 endif %}
- ipv6 protocol {{ protocol_name }} route-map {{ protocol_config.route_map }}
-{%             endfor %}
-{%         endif %}
-{%         if vrf_config.protocols.rpki is vyos_defined %}
- {{ render_rpki(vrf_config.protocols.rpki) | indent(width=1) }}
-{%         endif %}
-{%         if vrf_config.vni is vyos_defined %}
+{% if vrf_config.ip is vyos_defined %}
+ {{ zebra_config(vrf_config.ip, 'ip') | indent(width=1) }}
+{% endif %}
+{% if vrf_config.ipv6 is vyos_defined %}
+ {{ zebra_config(vrf_config.ipv6, 'ipv6') | indent(width=1) }}
+{% endif %}
+{% if vrf_config.protocols.rpki is vyos_defined %}
+ {{ rpki_config(vrf_config.protocols.rpki) | indent(width=1) }}
+{% endif %}
+{% if vrf_config.vni is vyos_defined %}
  vni {{ vrf_config.vni }}
-{%         endif %}
+{% endif %}
 exit-vrf
 !
-{%     endfor %}
-{% endif %}
