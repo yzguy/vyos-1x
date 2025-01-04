@@ -26,11 +26,11 @@ from vyos.utils.process import call
 from vyos import ConfigError
 from vyos import airbag
 
-
 airbag.enable()
 
 node_exporter_service_file = '/etc/systemd/system/node_exporter.service'
 node_exporter_systemd_service = 'node_exporter.service'
+node_exporter_collector_path = '/run/node_exporter/collector'
 
 frr_exporter_service_file = '/etc/systemd/system/frr_exporter.service'
 frr_exporter_systemd_service = 'frr_exporter.service'
@@ -124,6 +124,13 @@ def generate(monitoring):
             'prometheus/node_exporter.service.j2',
             monitoring['node_exporter'],
         )
+        if (
+            'collectors' in monitoring['node_exporter']
+            and 'textfile' in monitoring['node_exporter']['collectors']
+        ):
+            # Create textcollector folder
+            if not os.path.isdir(node_exporter_collector_path):
+                os.makedirs(node_exporter_collector_path)
 
     if 'frr_exporter' in monitoring:
         # Render frr_exporter service_file

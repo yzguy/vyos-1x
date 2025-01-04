@@ -21,6 +21,19 @@
                     <defaultValue>9100</defaultValue>
                   </leafNode>
                   #include <include/interface/vrf.xml.i>
+                  <node name="collectors">
+                    <properties>
+                      <help>Collectors specific configuration</help>
+                    </properties>
+                    <children>
+                      <leafNode name="textfile">
+                        <properties>
+                          <help>Enables textfile collector to read from /run/node_exporter/collector</help>
+                          <valueless/>
+                        </properties>
+                      </leafNode>
+                    </children>
+                  </node>
                 </children>
               </node>
               <node name="frr-exporter">
