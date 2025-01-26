@@ -497,7 +497,7 @@ def kea_get_server_leases(config, inet, pools=[], state=[], origin=None) -> list
         )
         data_lease['origin'] = 'local'  # TODO: Determine remote in HA
         # remove trailing dot in 'hostname' to ensure consistency for `vyos-hostsd-client`
-        data_lease['hostname'] = lease.get('hostname', '-').rstrip('.')
+        data_lease['hostname'] = lease.get('hostname', '').rstrip('.') or '-'
 
         if inet == '4':
             data_lease['mac'] = lease['hw-address']
@@ -512,7 +512,7 @@ def kea_get_server_leases(config, inet, pools=[], state=[], origin=None) -> list
                 prefix_len = lease['prefix-len']
                 data_lease['ip'] += f'/{prefix_len}'
 
-        data_lease['remaining'] = '-'
+        data_lease['remaining'] = ''
 
         if lease['valid-lft'] > 0:
             data_lease['remaining'] = lease['expire_timestamp'] - datetime.now(
@@ -526,7 +526,7 @@ def kea_get_server_leases(config, inet, pools=[], state=[], origin=None) -> list
 
         # Do not add old leases
         if (
-            data_lease['remaining']
+            data_lease['remaining'] != ''
             and data_lease['pool'] in pools
             and data_lease['state'] != 'free'
             and (not state or state == 'all' or data_lease['state'] in state)
