@@ -474,12 +474,11 @@ def kea_get_server_leases(config, inet, pools=[], state=[], origin=None) -> list
     data = []
     for lease in leases:
         lifetime = lease['valid-lft']
-        expiry = lease['cltt'] + lifetime
+        start = lease['cltt']
+        expiry = start + lifetime
 
-        lease['start_timestamp'] = datetime.fromtimestamp(
-            expiry - lifetime, timezone.utc
-        )
-        lease['expire_timestamp'] = (
+        lease['start_time'] = datetime.fromtimestamp(start, timezone.utc)
+        lease['expire_time'] = (
             datetime.fromtimestamp(expiry, timezone.utc) if expiry else None
         )
 
@@ -493,7 +492,7 @@ def kea_get_server_leases(config, inet, pools=[], state=[], origin=None) -> list
             else '-'
         )
         data_lease['end'] = (
-            lease['expire_timestamp'].timestamp() if lease['expire_timestamp'] else None
+            lease['expire_time'].timestamp() if lease['expire_time'] else None
         )
         data_lease['origin'] = 'local'  # TODO: Determine remote in HA
         # remove trailing dot in 'hostname' to ensure consistency for `vyos-hostsd-client`
@@ -501,10 +500,10 @@ def kea_get_server_leases(config, inet, pools=[], state=[], origin=None) -> list
 
         if inet == '4':
             data_lease['mac'] = lease['hw-address']
-            data_lease['start'] = lease['start_timestamp'].timestamp()
+            data_lease['start'] = lease['start_time'].timestamp()
 
         if inet == '6':
-            data_lease['last_communication'] = lease['start_timestamp'].timestamp()
+            data_lease['last_communication'] = lease['start_time'].timestamp()
             data_lease['duid'] = _format_hex_string(lease['duid'])
             data_lease['type'] = lease['type']
 
@@ -514,15 +513,11 @@ def kea_get_server_leases(config, inet, pools=[], state=[], origin=None) -> list
 
         data_lease['remaining'] = '-'
 
-        if lease['valid-lft'] > 0:
-            data_lease['remaining'] = lease['expire_timestamp'] - datetime.now(
-                timezone.utc
-            )
-
-            if data_lease['remaining'].days >= 0:
-                # substraction gives us a timedelta object which can't be formatted with strftime
-                # so we use str(), split gets rid of the microseconds
-                data_lease['remaining'] = str(data_lease['remaining']).split('.')[0]
+        now = datetime.now(timezone.utc)
+        if lease['valid-lft'] > 0 and lease['expire_time'] > now:
+            # substraction gives us a timedelta object which can't be formatted
+            # with strftime so we use str(), split gets rid of the microseconds
+            data_lease['remaining'] = str(lease['expire_time'] - now).split('.')[0]
 
         # Do not add old leases
         if (
