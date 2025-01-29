@@ -33,6 +33,18 @@
         </constraint>
       </properties>
     </leafNode>
+    <leafNode name="source">
+      <properties>
+        <help>Source address for connection to the cache server</help>
+        <valueHelp>
+          <format>ipv4</format>
+          <description>Source IP address for connection</description>
+        </valueHelp>
+        <constraint>
+          <validator name="ip-address"/>
+        </constraint>
+      </properties>
+    </leafNode>
     <node name="ssh">
       <properties>
         <help>RPKI SSH connection settings</help>
