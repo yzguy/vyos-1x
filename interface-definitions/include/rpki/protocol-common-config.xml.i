@@ -33,6 +33,7 @@
         </constraint>
       </properties>
     </leafNode>
+    #include <include/source-address-ipv4.xml.i>
     <node name="ssh">
       <properties>
         <help>RPKI SSH connection settings</help>
